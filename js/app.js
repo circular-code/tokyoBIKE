@@ -9,11 +9,10 @@ var g = {
     spriteOffsetX: 0
 };
 
-var Movable = function(x, y, sprite, speed) {
+var Movable = function(x, y, sprite) {
     this.sprite = sprite;
     this.x = x;
     this.y = y;
-    this.speed = speed;
 };
 
 // Draw instance on the screen
@@ -21,24 +20,37 @@ Movable.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-var Enemy = function(x, y, sprite, speed) {
-    Movable.call(this, x, y, sprite, speed);
+var Enemy = function(sprite, stats) {
+    Movable.call(this, stats.x, stats.y, sprite);
+    this.speed = stats.speed;
 };
 
 // Inherit from the parent class
 Enemy.prototype = Object.create(Movable.prototype);
 Enemy.prototype.constructor = Enemy;
-
 Enemy.prototype.update = function(dt) {
-    this.x += 42.5 * dt;
+    
+    // standard enemy movement
+    this.x += this.speed * dt;
+
+    // if out of bounds, restart as new bug incarnation (kind of)
+    if (this.x > 500) {
+        var stats = getEnemyStats();
+
+        this.x = stats.x;
+        this.y = stats.y;
+        this.speed = stats.speed;
+    }
 };
 
 // Now write your own player class
 // This class requires an update(), render() and
 // a handleInput() method.
 
-var Player = function(x, y, sprite, speed) {
-    Movable.call(this, x, y, sprite, speed);
+var Player = function(sprite, stats) {
+    Movable.call(this, stats.x, stats.y, sprite);
+    this.speed = stats.speed;
+
     this.handleInput = function(key) {
         if (typeof key === 'undefined')
             return;
@@ -62,25 +74,23 @@ var Player = function(x, y, sprite, speed) {
 // Inherit from the parent class
 Player.prototype = Object.create(Movable.prototype);
 Player.prototype.constructor = Player;
-
 Player.prototype.update = function() {
 
 };
 
-// Player.prototype.
-
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-
-var player = new Player(g.spriteX * 2, g.spriteY * 4 + g.spriteOffsetY, 'images/char-boy.png', g.spriteY);
+var player = new Player('images/char-boy.png', {
+    x: g.spriteX * 2,
+    y: g.spriteY * 4 + g.spriteOffsetY,
+    speed: g.spriteY
+    }
+);
 
 var allEnemies = [];
 
-var j = 5;
+var j = 6;
 
 while (j) {
-    allEnemies.push(new Enemy(randomNumBetween(-300, -100), (randomNumBetween(3, 0) * g.spriteY) + 60, 'images/enemy-bug.png', randomNumBetween(3, 0) * 2));
+    allEnemies.push(new Enemy('images/enemy-bug.png', getEnemyStats()));
     j--;
 }
 
@@ -100,7 +110,6 @@ document.addEventListener('keyup', function(e) {
     player.handleInput(allowedKeys[e.keyCode]);
 });
 
-
 function randomNumBetween (max, min) {
     if (typeof max === 'undefined'){
         console.log('max undefined');
@@ -110,4 +119,12 @@ function randomNumBetween (max, min) {
         min = 0;
     }
     return Math.floor(Math.random()*(max-min)+min);
+}
+
+function getEnemyStats () {
+    return {
+        x: randomNumBetween(-300, -100),
+        y: randomNumBetween(3, 0) * g.spriteY + 60,
+        speed: randomNumBetween(70, 10) * 2
+    };
 }
