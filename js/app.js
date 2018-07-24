@@ -3,8 +3,8 @@
 
 /* TODO: genaue Werte bestimmen, berechnung anpassen (beim intatntiieren von player und enemies) */
 var g = {
-    spriteX: 80,
-    spriteY: 100,
+    spriteX: 100,
+    spriteY: 85,
     spriteOffsetY: 60,
     spriteOffsetX: 0
 };
@@ -49,24 +49,47 @@ Enemy.prototype.update = function(dt) {
 
 var Player = function(sprite, stats) {
     Movable.call(this, stats.x, stats.y, sprite);
-    this.speed = stats.speed;
+    this.speedX = stats.speedX;
+    this.speedY = stats.speedY;
 
-    this.handleInput = function(key) {
-        if (typeof key === 'undefined')
+    this.handleInput = function(keycode) {
+        if (typeof keycode === 'undefined')
             return;
 
-        switch (key) {
-            case 'left':
-                this.x -= this.speed;
+        switch (keycode) {
+
+            //left
+            case 37:
+            case 65:
+                if ((this.x) >= this.speedX)
+                    this.x -= this.speedX;
                 break;
-            case 'right':
-                this.x += this.speed;
+            //right
+            case 39:
+            case 68:
+                if ((this.x + this.speedX) <= this.speedX * 4)
+                    this.x += this.speedX;
                 break;
-            case 'up':
-                this.y -= this.speed;
+            //up
+            case 87:
+            case 38:
+                if ((this.y) >= this.speedY - g.spriteOffsetY)
+                    this.y -= this.speedY;
                 break;
-            case 'down':
-                this.y += this.speed;
+            //down
+            case 40:
+            case 83:
+                if ((this.y + this.speedY) <= this.speedY * 5)
+                    this.y += this.speedY;
+                break;
+
+            // 87: 'up',
+            // 38: 'up',
+            // 39: 'right',
+            // 68: 'right',
+            // 40: 'down',
+            // 83: 'down'
+
         }
     };
 };
@@ -81,7 +104,8 @@ Player.prototype.update = function() {
 var player = new Player('images/char-boy.png', {
     x: g.spriteX * 2,
     y: g.spriteY * 4 + g.spriteOffsetY,
-    speed: g.spriteY
+    speedX: g.spriteX,
+    speedY: g.spriteY
     }
 );
 
@@ -96,18 +120,7 @@ while (j) {
 
 // This listens for key presses and sends the keys to the Player.handleInput() method
 document.addEventListener('keyup', function(e) {
-    var allowedKeys = {
-        37: 'left',
-        65: 'left',
-        87: 'up',
-        38: 'up',
-        39: 'right',
-        68: 'right',
-        40: 'down',
-        83: 'down'
-    };
-
-    player.handleInput(allowedKeys[e.keyCode]);
+    player.handleInput(e.keyCode);
 });
 
 function randomNumBetween (max, min) {
