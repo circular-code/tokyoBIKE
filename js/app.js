@@ -1,14 +1,15 @@
 'use strict';
 
 
-/* TODO: genaue Werte bestimmen, berechnung anpassen (beim intatntiieren von player und enemies) */
+// globals numbers to calculate with
 var g = {
-    spriteX: 100,
-    spriteY: 85,
-    spriteOffsetY: 60,
-    spriteOffsetX: 0
+    spriteX: 101,
+    spriteY: 83,
+    spriteOffsetY: 58,
+    finished: false
 };
 
+// Parent class to Enemy and Player
 var Movable = function(x, y, sprite) {
     this.sprite = sprite;
     this.x = x;
@@ -23,29 +24,27 @@ Movable.prototype.render = function() {
 var Enemy = function(sprite, stats) {
     Movable.call(this, stats.x, stats.y, sprite);
     this.speed = stats.speed;
+    this.lane = stats.lane;
 };
 
 // Inherit from the parent class
 Enemy.prototype = Object.create(Movable.prototype);
 Enemy.prototype.constructor = Enemy;
 Enemy.prototype.update = function(dt) {
-    
+
     // standard enemy movement
     this.x += this.speed * dt;
 
     // if out of bounds, restart as new bug incarnation (kind of)
-    if (this.x > 500) {
+    if (this.x > 900) {
         var stats = getEnemyStats();
 
         this.x = stats.x;
         this.y = stats.y;
         this.speed = stats.speed;
+        this.lane = stats.lane;
     }
 };
-
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
 
 var Player = function(sprite, stats) {
     Movable.call(this, stats.x, stats.y, sprite);
@@ -58,61 +57,91 @@ var Player = function(sprite, stats) {
 
         switch (keycode) {
 
-            //left
-            case 37:
-            case 65:
-                if ((this.x) >= this.speedX)
-                    this.x -= this.speedX;
-                break;
-            //right
-            case 39:
-            case 68:
-                if ((this.x + this.speedX) <= this.speedX * 4)
-                    this.x += this.speedX;
-                break;
-            //up
-            case 87:
-            case 38:
-                if ((this.y) >= this.speedY - g.spriteOffsetY)
-                    this.y -= this.speedY;
-                break;
-            //down
-            case 40:
-            case 83:
-                if ((this.y + this.speedY) <= this.speedY * 5)
-                    this.y += this.speedY;
-                break;
-
-            // 87: 'up',
-            // 38: 'up',
-            // 39: 'right',
-            // 68: 'right',
-            // 40: 'down',
-            // 83: 'down'
-
+        //go left
+        case 37:
+        case 65:
+            if ((this.x) >= this.speedX)
+                this.update('x', -1);
+            break;
+        //go right
+        case 39:
+        case 68:
+            if ((this.x + this.speedX) <= this.speedX * 8)
+                this.update('x', 1);
+            break;
+        //go up
+        case 87:
+        case 38:
+            if ((this.y) >= this.speedY - g.spriteOffsetY)
+                this.update('y', -1);
+            break;
+        //go down
+        case 40:
+        case 83:
+            if ((this.y + this.speedY) <= this.speedY * 7)
+                this.update('y', 1);
+            break;
         }
+    };
+
+    // update position on the canvas
+    this.update = function(direction,sign) {
+
+        // update position
+        if (direction && sign) {
+            this[direction] = this[direction] + this['speed' + direction.toUpperCase()] * sign;
+
+            // check if game completed
+            if (this.y < 0 && g.finished !== true) {
+                if (confirm('Congratulations, you beat the game! Want to restart?')) {
+                    g.finished = true;
+                    location.reload();
+                }
+                else
+                    g.finished = true;
+            }
+        }
+
+        var playerLane = Math.ceil(player.y / g.spriteY);
+
+        // remove out of bounds bugs
+        var bugs = allEnemies.filter(function(enemy){
+            return enemy.x > 0 && enemy.x < 910;
+        });
+
+        // detect possible collisions (bug is in the same lane with player)
+        var possibleCollision = bugs.filter(function(enemy){
+            return enemy.lane === playerLane;
+        });
+
+        // detect actual collision
+        possibleCollision.forEach(function(enemy) {
+            if (enemy.x + g.spriteX > player.x + 25 && enemy.x < player.x + 70)
+                player.reset();
+        });
+    };
+
+    this.reset = function() {
+        this.x = g.spriteX * 4;
+        this.y = g.spriteY * 6 + g.spriteOffsetY;
     };
 };
 
 // Inherit from the parent class
 Player.prototype = Object.create(Movable.prototype);
 Player.prototype.constructor = Player;
-Player.prototype.update = function() {
-
-};
 
 var player = new Player('images/char-boy.png', {
-    x: g.spriteX * 2,
-    y: g.spriteY * 4 + g.spriteOffsetY,
     speedX: g.spriteX,
     speedY: g.spriteY
     }
 );
 
-var allEnemies = [];
+player.reset();
 
-var j = 6;
-
+// create 20 emeny bugs
+var allEnemies = [],
+    j = 20;
 while (j) {
     allEnemies.push(new Enemy('images/enemy-bug.png', getEnemyStats()));
     j--;
@@ -135,9 +164,16 @@ function randomNumBetween (max, min) {
 }
 
 function getEnemyStats () {
+
+    var lane = randomNumBetween(7, 1);
+
+    if (lane === 4)
+        lane--;
+
     return {
-        x: randomNumBetween(-300, -100),
-        y: randomNumBetween(3, 0) * g.spriteY + 60,
-        speed: randomNumBetween(70, 10) * 2
+        lane: lane,
+        x: randomNumBetween(-700, -100),
+        y: lane * g.spriteY - g.spriteY + 60,
+        speed: randomNumBetween(170, 60) * 2
     };
 }
