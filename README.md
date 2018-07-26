@@ -1,5 +1,5 @@
 # Classic arcade game clone
-The "classic arcade game clone" is a website built for educational and fun purposes. The user controls a player and tries to reach the end of the canvas while avoiding the enemies.
+The "classic arcade game clone" is a webapp borrowing game basic mechanics from the original frogger. It is built for educational and fun purposes. The user controls a player and tries to reach the end of the canvas while avoiding the enemies.
 
 ### How to run the game:
 Simply open this webpage in a modern browser of your choice (any latest versions of Edge, Firefox, Safari or Chrome will do).: https://circular-code.github.io/tokyoBIKE/. The game should start automatically once the webpage is loaded in a browser. This game is built for desktop devices.
